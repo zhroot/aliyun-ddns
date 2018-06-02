@@ -18,10 +18,20 @@ const HttpInstance = axios.create({
     }
 });
 
+//缓存上一次的ip 如果没有变化，就别在访问阿里云了
+
+var lastIp = '';
+
+const reg = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+function testIp(str){
+	return reg.test(str);
+}
+
 main();
 
 // 每十五分钟更新一次
-schedule.scheduleJob('*/15 * * * *', function() {
+schedule.scheduleJob('*/10 * * * *', function() {
 	main();
 });
 
@@ -35,8 +45,19 @@ async function main() {
     const calcDate = new Date(calctime);
 
 	console.log(calcDate.toLocaleString(), '正在更新DNS记录 ...');
-	const ip = await getExternalIP();
+	//const ip = await getExternalIP();
+	const ip = await getExternalIPFromTB();
 	console.log(calcDate.toLocaleString(), '当前外网 ip:', ip);
+	if(!testIp(ip)){
+		console.log(calcDate.toLocaleString(), 'ip格式错误');
+		return;
+	}
+
+	if(ip == lastIp){
+		console.log(calcDate.toLocaleString(), 'ip地址没变化 上次ip:'+lastIp);
+		return;
+	}
+
 	const records = await getDomainInfo();
 	if (!records.length) {
 		console.log(calcDate.toLocaleString(), '记录不存在，新增中 ...');
@@ -45,7 +66,10 @@ async function main() {
 	}
 	const recordID = records[0].RecordId;
 	const recordValue = records[0].Value;
-	if (recordValue === ip) return console.log(calcDate.toLocaleString(), '记录一致, 无修改');
+	if (recordValue === ip) {
+		lastIp = ip;
+		return console.log(calcDate.toLocaleString(), '记录一致, 无修改');
+	}
 
 	await updateRecord(recordID, ip)
 	console.log(calcDate.toLocaleString(), '成功, 当前 dns 指向: ', ip);
@@ -102,6 +126,8 @@ function updateRecord(id, ip) {
 }
 
 // 获取本机外网 ip 地址
+
+/*
 async function getExternalIP() {
     const res = await axios.get('http://ifconfig.me/ip', {
     	timeout: 10000,
@@ -110,6 +136,27 @@ async function getExternalIP() {
         }
     });
     return res.data.replace('\n', '');
+}
+*/
+
+async function getExternalIPFromTB(){
+	const res = await axios.get('http://ip.taobao.com/service/getIpInfo.php?ip=myip', {
+    	timeout: 10000,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36'
+        }
+	});
+	var ip = "";
+	try{
+		if(res.data.code == 0){
+			ip = res.data.data.ip;
+		}
+	}catch(e){
+		console.log('JSON.parse error:',e);
+		console.log(res.data);
+	}
+	return ip;
+	
 }
 
 // 获取当前解析记录
