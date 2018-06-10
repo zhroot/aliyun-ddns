@@ -35,5 +35,5 @@ ALIYUN-DDNS
 
 * 服务进程使用 `pm2` 维护，如想开机启动自行配置
 
-* 每十五分钟更新一次，如需调整修改 `index.js` 中 `schedule`
+* 每十分钟更新一次，如需调整修改 `index.js` 中 `schedule`
 
