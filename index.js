@@ -30,8 +30,8 @@ function testIp(str){
 
 main();
 
-// 每十分钟更新一次
-schedule.scheduleJob('*/10 * * * *', function() {
+// 每一分钟更新一次
+schedule.scheduleJob('*/1 * * * *', function() {
 	main();
 });
 
