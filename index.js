@@ -44,17 +44,17 @@ async function main() {
     const calctime = utc + (3600000 * offset);
     const calcDate = new Date(calctime);
 
-	console.log(calcDate.toLocaleString(), '正在更新DNS记录 ...');
+	//console.log(calcDate.toLocaleString(), '正在更新DNS记录 ...');
 	//const ip = await getExternalIP();
 	const ip = await getExternalIPFromTB();
-	console.log(calcDate.toLocaleString(), '当前外网 ip:', ip);
+	//console.log(calcDate.toLocaleString(), '当前外网 ip:', ip);
 	if(!testIp(ip)){
 		console.log(calcDate.toLocaleString(), 'ip格式错误');
 		return;
 	}
 
 	if(ip == lastIp){
-		console.log(calcDate.toLocaleString(), 'ip地址没变化 上次ip:'+lastIp);
+		//console.log(calcDate.toLocaleString(), 'ip地址没变化 上次ip:'+lastIp);
 		return;
 	}
 
@@ -68,7 +68,8 @@ async function main() {
 	const recordValue = records[0].Value;
 	if (recordValue === ip) {
 		lastIp = ip;
-		return console.log(calcDate.toLocaleString(), '记录一致, 无修改');
+		//return console.log(calcDate.toLocaleString(), '记录一致, 无修改');
+		return;
 	}
 
 	await updateRecord(recordID, ip)
